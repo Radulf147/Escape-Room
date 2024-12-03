@@ -1,21 +1,38 @@
-Janela_Cena janela_cena1;            // Janela para exibir mensagens ou puzzles
-ArrayList<Puzzle> puzzles; // Lista de puzzles
 // Classe principal do jogo
 class Jogo {
+  PImage imgQuarto;         // Fundo do quarto
+  ArrayList<Puzzle> puzzles; // Lista de puzzles
+  Janela_Puzzle_Porta janela_puzzle_porta;   // Janela para exibir mensagens ou puzzles
+
   Jogo() {
+    imgQuarto = loadImage("Fundo_Base.png"); // Carrega o fundo do quarto
     puzzles = new ArrayList<>();
-    janela_cena1 = new Janela_Cena(200, 100, 400, 400, "Fundo_Janela.png"); // Janela inicial
-        // Criar puzzles (papéis clicáveis)
-    puzzles.add(new Puzzle_Porta("Papel 1", 525, 75, 100, 200, "Papel.png", janela_cena1));
+    janela_puzzle_porta = new Janela_Puzzle_Porta(200, 100, 400, 400, "Fundo_Janela.png"); // Janela inicial
     
-    /* Precisa criar um extend para cada puzzle e janela existente para conseguir gerar um novo puzzle*/
-    //puzzles.add(new Puzzle_(...)("Papel 2", 60, 445, 100, 100, "Papel.png", janela_cena1));
-    //puzzles.add(new Puzzle_(...)("Papel 3", 520, 360, 60, 175, "Papel.png", janela_cena1));
-    //puzzles.add(new Puzzle_(...)("Papel 4", 80, 275, 75, 100, "Papel.png", janela_cena1));
-    //puzzles.add(new Puzzle_(...)("Papel 5", 300, 60, 100, 100, "Papel.png", janela_cena1));
+    // Criar puzzles
+    puzzles.add(new Puzzle("Papel 1", 525, 75, 100, 200, "Papel.png", janela_puzzle_porta));
+    puzzles.add(new Puzzle("Papel 2", 60, 445, 100, 100, "Papel.png", janela_puzzle_porta));
+    puzzles.add(new Puzzle("Papel 3", 520, 360, 60, 175, "Papel.png", janela_puzzle_porta));
+    puzzles.add(new Puzzle("Papel 4", 80, 275, 75, 100, "Papel.png", janela_puzzle_porta));
+    puzzles.add(new Puzzle("Papel 5", 300, 60, 100, 100, "Papel.png", janela_puzzle_porta));
   }
 
-  void verificarClique(int mouseX, int mouseY, Janela_Cena janela) {
+  void desenhar() {
+    // Desenhar fundo do quarto
+    image(imgQuarto, 0, 0, width, height);
+
+    // Desenhar puzzles
+    for (Puzzle puzzle : puzzles) {
+      puzzle.desenhar();
+    }
+
+    // Desenhar a janela, se estiver aberta
+    if (janela_puzzle_porta.estaAberta) {
+      janela_puzzle_porta.desenhar();
+    }
+  }
+
+  void verificarClique(int mouseX, int mouseY) {
     // Verificar se algum puzzle foi clicado
     boolean puzzleClicado = false;
     for (Puzzle puzzle : puzzles) {
@@ -24,24 +41,23 @@ class Jogo {
         break;
       }
     }
-  
+
     // Se nenhum puzzle foi clicado, verificar clique na janela
-    if (!puzzleClicado && janela.estaAberta) {
-      janela.verificarClique(mouseX, mouseY);
+    if (!puzzleClicado && janela_puzzle_porta.estaAberta) {
+      janela_puzzle_porta.verificarClique(mouseX, mouseY);
     }
   }
-
 }
 
 // Classe que representa um puzzle
-abstract class Puzzle {
+class Puzzle {
   String nome;
   int x, y, largura, altura;
   boolean resolvido;
   PImage img;
-  Janela janela;
+  Janela_Puzzle_Porta janelaAssociada;
 
-  Puzzle(String nome, int x, int y, int largura, int altura, String imgPath, Janela janela) {
+  Puzzle(String nome, int x, int y, int largura, int altura, String imgPath, Janela_Puzzle_Porta janela) {
     this.nome = nome;
     this.x = x;
     this.y = y;
@@ -49,42 +65,19 @@ abstract class Puzzle {
     this.altura = altura;
     this.resolvido = false;
     this.img = loadImage(imgPath);
-    this.janela = janela;
+    this.janelaAssociada = janela;
   }
 
   void desenhar() {
-    if (!resolvido) {
-      image(img, x, y, largura, altura);
-    }
+    image(img, x, y, largura, altura);
   }
 
-  abstract void interagir(); // Define o comportamento ao interagir com o puzzle
-  
   boolean verificarClique(int mouseX, int mouseY) {
     if (!resolvido && mouseX > x && mouseX < x + largura && mouseY > y && mouseY < y + altura) {
-      janela.abrir();  // Abre a janela associada ao puzzle
+      janelaAssociada.abrir();
       return true;
     }
     return false;
-  }
-
-}
-
-// Classe que representa um puzzle com mensagem
-class Puzzle_Porta extends Puzzle {
-  Puzzle_Porta(String nome, int x, int y, int largura, int altura, String imgPath, Janela janela) {
-    super(nome, x, y, largura, altura, imgPath, janela);  
-  }
-
-  void renderizarConteudo(PGraphics superficie) {
-    superficie.fill(0);
-    superficie.textSize(20);
-    superficie.text("Olá, JOGADOR. Os seus\namigos te trancaram\ndentro de casa e pra\npoder sair você terá\nque achar os puzzles\ne resolve-los.\n                           Boa sorte!", 50, 100);
-  }
-
-  @Override
-  void interagir() {
-    // Definir o que ocorre quando interage com o puzzle de mensagem
   }
 }
 
@@ -113,69 +106,36 @@ abstract class Janela {
     this.estaAberta = false;
   }
 
-  void desenhar() {
+  abstract void desenhar();
+
+  abstract void verificarClique(int mouseX, int mouseY);
+}
+class Janela_Puzzle_Porta extends Janela
+{
+  Janela_Puzzle_Porta(int x, int y, int largura, int altura, String imgPath){
+    super(x, y, largura, altura, imgPath);  
+  }
+  void desenhar(){
     if (!estaAberta) return;
 
     superficie.beginDraw();
     superficie.image(fundo, 0, 0, largura, altura); // Fundo da janela
     superficie.fill(0);
-    superficie.textSize(30);
+    superficie.textSize(16);
+    superficie.text("Olá, JOGADOR. Os seus\namigos te trancaram\ndentro de casa e pra\npoder sair você terá\nque achar os puzzles\ne resolve-los.\n                           Boa sorte!", 50, 100);
     superficie.endDraw();
 
     image(superficie, x, y);
   }
+  void verificarClique(int mouseX, int mouseY)
+  {
+    if (mouseX > x && mouseX < x + largura && mouseY > y && mouseY < y + altura) {
+      fechar();
+    }
+  }
   
-  abstract void renderizarConteudo(PGraphics superficie); // Renderiza o conteúdo da janela
-  abstract void verificarClique(int mouseX, int mouseY); 
 }
 
-// Classe que implementa a Janela_Cena
-class Janela_Cena extends Janela {
-  PImage imgQuarto;         // Fundo do quarto
-  Janela_Cena(int x, int y, int largura, int altura, String imgPath) {
-    super(x, y, largura, altura, imgPath);
-    imgQuarto = loadImage("Fundo_Base.png"); // Carrega o fundo do quarto
-  }
-    
-  @Override
-  void renderizarConteudo(PGraphics superficie) {
-    this.desenhar();  // Desenha o conteúdo da janela no contexto principal
-    // Desenhar fundo do quarto
-    image(imgQuarto, 0, 0, width, height);
-
-    // Desenhar puzzles (papéis)
-    for (Puzzle puzzle : puzzles) {
-      puzzle.desenhar();
-    }
-
-    // Desenhar a janela, se estiver aberta
-    if (this.estaAberta) {
-      this.desenhar();
-    }
-  }
-  void verificarClique(int mouseX, int mouseY)
-  {
-     if (mouseX > x && mouseX < x + largura && mouseY > y && mouseY < y + altura) {
-      fechar();
-    }
-  }
-}
-class Janela_Porta extends Janela {
-  Janela_Porta(int x, int y, int largura, int altura, String imgPath) {
-    super(x, y, largura, altura, imgPath);
-  }
-    
-  @Override
-  void renderizarConteudo(PGraphics superficie) {
-    desenhar();  // Desenha o conteúdo da janela no contexto principal
-  }
-  void verificarClique(int mouseX, int mouseY)
-  {
-     if (mouseX > x && mouseX < x + largura && mouseY > y && mouseY < y + altura) {
-      fechar();
-    }
-  }
-}
 // Funções principais do Processing
 Jogo jogo;
 
@@ -186,9 +146,9 @@ void setup() {
 
 void draw() {
   background(255);
-  janela_cena1.desenhar();  // Chama o método de desenho do Jogo
+  jogo.desenhar(); // Desenha o jogo
 }
 
 void mousePressed() {
-  jogo.verificarClique(mouseX, mouseY, janela_cena1); // Verifica cliques no jogo
+  jogo.verificarClique(mouseX, mouseY); // Verifica cliques no jogo
 }
