@@ -1,12 +1,14 @@
 // Classe principal do jogo
 class Jogo {
   PImage imgQuarto;         // Imagem que representa o fundo do quarto
+  PImage imgEscapou;         // Imagem que representa o fundo quando escapa
   ArrayList<Puzzle> puzzles; // Lista que armazena os puzzles do jogo
   ArrayList<Janela> janelas; // Lista que armazena as janelas do jogo
-
+  int resolvidos_total = 0;
   // Construtor da classe Jogo
   Jogo() {
     imgQuarto = loadImage("Fundo_Base.png"); // Carrega a imagem de fundo do quarto
+    imgEscapou = loadImage("Fundo_Escapou.jpeg"); // Carrega a imagem de fundo dizendo que você escapou
     puzzles = new ArrayList<>(); // Inicializa a lista de puzzles
     janelas = new ArrayList<>(); // Inicializa a lista de janelas
 
@@ -114,7 +116,6 @@ abstract class Janela {
   boolean estaAberta;        // Flag que indica se a janela está aberta
   PGraphics superficie;      // Superfície de desenho da janela
   PImage fundo;              // Imagem de fundo da janela
-
   // Construtor da classe Janela
   Janela(int x, int y, int largura, int altura, String imgPath) {
     this.x = x;                               // Inicializa a coordenada x da janela
@@ -124,6 +125,7 @@ abstract class Janela {
     this.estaAberta = false;                  // Inicializa o estado da janela como fechada
     this.superficie = createGraphics(largura, altura); // Cria a superfície de desenho para a janela
     this.fundo = loadImage(imgPath);          // Carrega a imagem de fundo da janela
+
   }
 
   // Função para abrir a janela
@@ -312,6 +314,10 @@ class Janela_Puzzle_Cadeado extends Janela {
     if (qntCodigosCertos == 4) {
       mensagemErro = ""; // Se todos os códigos forem certos, limpa a mensagem de erro
       println("Parabéns, você encontrou todos os códigos, agora pode ir embora!"); // Mensagem de sucesso
+      jogo.puzzles.get(1).resolvido = true;
+      jogo.resolvidos_total++;
+      this.fechar();
+      
     } else {
       mensagemErro = "Existem códigos incorretos. Tente novamente!"; // Se houver erros, exibe mensagem de erro
       println("Existem códigos incorretos.");
@@ -365,6 +371,9 @@ void setup() {
 void draw() {
   background(255); // Define a cor de fundo da tela como branco (255 representa a cor branca)
   jogo.desenhar(); // Chama o método desenhar() da classe Jogo para renderizar o estado do jogo na tela
+  if (jogo.puzzles.get(1).resolvido) {
+     image(jogo.imgEscapou, 0, 0, width, height);
+  } 
 }
 
 // Função mousePressed() é chamada sempre que o botão do mouse é pressionado
