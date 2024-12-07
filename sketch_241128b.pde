@@ -1,10 +1,13 @@
+import java.util.Arrays;
 // Classe principal do jogo
+
+
 class Jogo {
   PImage imgQuarto;         // Imagem que representa o fundo do quarto
   PImage imgEscapou;         // Imagem que representa o fundo quando escapa
   ArrayList<Puzzle> puzzles; // Lista que armazena os puzzles do jogo
   ArrayList<Janela> janelas; // Lista que armazena as janelas do jogo
-  int resolvidos_total = 0;
+
   // Construtor da classe Jogo
   Jogo() {
     imgQuarto = loadImage("Fundo_Base.png"); // Carrega a imagem de fundo do quarto
@@ -15,9 +18,10 @@ class Jogo {
     // Criando e associando as janelas aos puzzles
     Janela_Puzzle_Porta janela_puzzle_porta = new Janela_Puzzle_Porta(200, 100, 400, 400, "Fundo_Janela.png");
     Janela_Puzzle_Cadeado janela_puzzle_cadeado = new Janela_Puzzle_Cadeado(250, 150, 300, 300, "Fundo_Janela.png");
-
+    Janela_Puzzle_Vinil janela_puzzle_vinil = new Janela_Puzzle_Vinil(150,50,500,500, "Fundo_Vinil.jpg");
     janelas.add(janela_puzzle_porta); // Adiciona a janela de puzzle da porta à lista de janelas
     janelas.add(janela_puzzle_cadeado); // Adiciona a janela de puzzle do cadeado à lista de janelas
+    janelas.add(janela_puzzle_vinil); // Adiciona a janela de puzzle do cadeado à lista de janelas
 
     // Criando os puzzles e associando-os às janelas criadas
     puzzles.add(new Puzzle("Papel 1", 555, 140, 40, 60, "Papel.png", janela_puzzle_porta));
@@ -25,7 +29,7 @@ class Jogo {
     puzzles.add(new Puzzle("Papel 3", 520, 360, 60, 175, "", janela_puzzle_porta));
     puzzles.add(new Puzzle("Papel 4", 80, 275, 75, 100, "", janela_puzzle_porta));
     puzzles.add(new Puzzle("Papel 5", 300, 60, 100, 100, "", janela_puzzle_porta));
-    puzzles.add(new Puzzle("Papel 6", 60, 445, 100, 100, "", janela_puzzle_porta));
+    puzzles.add(new Puzzle("Papel 6", 60, 445, 100, 100, "", janela_puzzle_vinil));
   }
 
   // Função responsável por desenhar os elementos do jogo
@@ -48,22 +52,21 @@ class Jogo {
 
   // Função para verificar se o jogador clicou em algum elemento
   void verificarClique(int mouseX, int mouseY) {
-    // Verifica se algum puzzle foi clicado
+     // Verifica se algum puzzle foi clicado
     boolean puzzleClicado = false;
-    for (Puzzle puzzle : puzzles) {
-      if (puzzle.verificarClique(mouseX, mouseY)) { // Verifica se o clique foi dentro do puzzle
-        puzzleClicado = true; // Marca que um puzzle foi clicado
-        break; // Interrompe o loop após o primeiro clique registrado
-      }
-    }
-
-    // Se nenhum puzzle foi clicado, verifica os cliques nas janelas abertas
+     // Se nenhum puzzle foi clicado, verifica os cliques nas janelas abertas
     if (!puzzleClicado) {
       for (Janela janela : janelas) {
         if (janela.estaAberta) { // Verifica se a janela está aberta
           janela.verificarClique(mouseX, mouseY); // Verifica se o clique foi dentro da janela aberta
           break; // Interrompe o loop após o primeiro clique em uma janela
         }
+      }
+    }
+    for (Puzzle puzzle : puzzles) {
+      if (puzzle.verificarClique(mouseX, mouseY)) { // Verifica se o clique foi dentro do puzzle
+        puzzleClicado = true; // Marca que um puzzle foi clicado
+        break; // Interrompe o loop após o primeiro clique registrado
       }
     }
   }
@@ -144,7 +147,6 @@ abstract class Janela {
   // Método abstrato para verificar cliques dentro da janela (deve ser implementado nas classes filhas)
   abstract void verificarClique(int mouseX, int mouseY);
 }
-
 
 // Subclasse de Janela para o puzzle da porta
 class Janela_Puzzle_Porta extends Janela {
@@ -315,7 +317,6 @@ class Janela_Puzzle_Cadeado extends Janela {
       mensagemErro = ""; // Se todos os códigos forem certos, limpa a mensagem de erro
       println("Parabéns, você encontrou todos os códigos, agora pode ir embora!"); // Mensagem de sucesso
       jogo.puzzles.get(1).resolvido = true;
-      jogo.resolvidos_total++;
       this.fechar();
       
     } else {
@@ -353,9 +354,210 @@ class Janela_Puzzle_Cadeado extends Janela {
 
 //Classes que faltam serem implementadas. Ao implementar cada classe você poderá fazer novos puzzles existirem
 /*class Janela_Puzzle_Luminaria_Grande extends Janela{}
-class Janela_Puzzle_Luminaria_Pequena extends Janela{}
-class Janela_Vinil extends Janela{}
-class Janela_Janela extends Janela{}*/
+class Janela_Puzzle_Luminaria_Pequena extends Janela{}*/
+
+
+class Janela_Puzzle_Vinil extends Janela {
+
+  // Constantes para os slots e inventário
+  float[][] botoes;
+  PImage xImg = loadImage("x.jpg");
+  int[] craftingSlots = {0, 0, 0}; // Slots de crafting
+  String[] selecionado = {"", "", ""}; // Inventário inicial
+  int botaoSelecionado = -1; // Índice do item selecionado do inventário
+  boolean combinacaoValida = false;
+  String mensagemErro = "";
+  PImage[] imagens = {loadImage("Pilha.png"), loadImage("Prego.png"), loadImage("Fio_Cobre.png"), loadImage("Madeira.png"), loadImage("Fio_Lã.png"), loadImage("Carregador.png"), loadImage("fundo_craft.jpg"), loadImage("fundo_craft.jpg"), loadImage("fundo_craft.jpg")};
+  int[][] coordenadas = new int[10][3];
+  int botaoFecharX = largura - 60; // Botão de fechar no canto superior direito
+  int botaoFecharY = 10;
+  int botaoFecharLargura = 50;
+  int botaoFecharAltura = 50;
+    
+  Janela_Puzzle_Vinil(int x, int y, int largura, int altura, String imgPath) {
+    super(x, y, largura, altura, imgPath);
+  }
+
+  public PImage getItemPorIndex(int index) {
+    // Verifica se o índice está dentro do intervalo das imagens
+    if (index >= 0 && index < imagens.length) {
+        return imagens[index]; // Retorna a imagem correspondente ao índice
+    } else {
+        return null; // Retorna null caso o índice seja inválido
+    }
+  }
+  @Override
+  void desenhar() {
+    if (!estaAberta) return;
+
+    superficie.beginDraw();
+    superficie.image(fundo, 0, 0, largura, altura);
+
+    // Configurações gerais para os botões
+    int botaoLargura = 100;
+    int botaoAltura = 40;
+    int espacoHorizontal = 40;
+    int espacoVertical = 20;
+    int cols = 3;
+    int rows = 2;
+
+    // Margens para centralizar os botões
+    int margemSuperior = (altura - (rows * botaoAltura + (rows - 1) * espacoVertical)) / 2;
+    int margemEsquerda = (largura - (cols * botaoLargura + (cols - 1) * espacoHorizontal)) / 2;
+
+    // Matriz para armazenar as posições e dimensões (x, y, largura, altura)
+    botoes = new float[11][4];
+    int indice = 0;
+
+    // Desenhar os 6 botões da grade
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            int x = margemEsquerda + col * (botaoLargura + espacoHorizontal);
+            int y = margemSuperior + row * (botaoAltura + espacoVertical) + 140;
+
+            botoes[indice][0] = x;
+            botoes[indice][1] = y;
+            botoes[indice][2] = botaoLargura;
+            botoes[indice][3] = botaoAltura;
+            superficie.image(imagens[indice], x, y, botaoLargura, botaoAltura);
+            indice++;
+        }
+    }
+
+    // Botão "Combinar"
+    int botaoCombinarX = largura / 2 - botaoLargura / 2;
+    int botaoCombinarY = margemSuperior + rows * (botaoAltura + espacoVertical) - 50;
+
+    superficie.fill(100, 150, 255);
+    superficie.rect(botaoCombinarX, botaoCombinarY, botaoLargura, botaoAltura);
+    superficie.fill(0);
+    superficie.textAlign(PConstants.CENTER, PConstants.CENTER);
+    superficie.text("Combinar", botaoCombinarX + botaoLargura / 2, botaoCombinarY + botaoAltura / 2);
+    botoes[10][0] = botaoCombinarX;
+    botoes[10][1] = botaoCombinarY;
+    botoes[10][2] = botaoLargura;
+    botoes[10][3] = botaoAltura;
+
+    // Retângulo maior
+    int retanguloX = margemEsquerda;
+    int retanguloY = botaoCombinarY - 210;
+    int retanguloLargura = cols * botaoLargura + (cols - 1) * espacoHorizontal;
+    int retanguloAltura = 180;
+
+    superficie.fill(200, 200, 200);
+    superficie.rect(retanguloX, retanguloY, retanguloLargura, retanguloAltura);
+
+    // Botões internos
+    int internoEspacoVertical = 20;
+    int internoLargura = botaoLargura;
+    int internoAltura = 35;
+    
+    for (int i = 0; i < 3; i++) {
+        int internoX = retanguloX + 20;
+        int internoY = retanguloY + 20 + i * (internoAltura + internoEspacoVertical);
+
+        botoes[indice][0] = internoX;
+        botoes[indice][1] = internoY;
+        botoes[indice][2] = internoLargura;
+        botoes[indice][3] = internoAltura;
+        indice++;
+        
+        // Usar a imagem de fundo já presente no vetor
+        superficie.image(imagens[i+6], internoX, internoY, internoLargura, internoAltura);
+    }
+
+    // Retângulo horizontal
+    int internoHorizontalX = retanguloX + internoLargura + 60;
+    int internoHorizontalY = retanguloY - 35 + internoAltura + internoEspacoVertical;
+    int internoHorizontalLargura = internoLargura * 2;
+    int internoHorizontalAltura = internoAltura + 110;
+
+    botoes[indice][0] = internoHorizontalX;
+    botoes[indice][1] = internoHorizontalY;
+    botoes[indice][2] = internoHorizontalLargura;
+    botoes[indice][3] = internoHorizontalAltura;
+    indice++;
+    superficie.fill(150, 150, 200);
+    superficie.rect(internoHorizontalX, internoHorizontalY, internoHorizontalLargura, internoHorizontalAltura);
+
+    superficie.image(xImg, botaoFecharX, botaoFecharY, botaoFecharLargura, botaoFecharAltura); // Desenha o botão de fechar com a imagem carregada
+
+    superficie.endDraw(); // Finaliza a renderização da superfície
+    image(superficie, x, y); // Desenha a superfície na tela nas coordenadas (x, y)
+    superficie.endDraw();
+    image(superficie, x, y);
+}
+
+
+
+  @Override
+void verificarClique(int mouseX, int mouseY) {
+  // Verifica clique no botão "Fechar"
+    int botaoFecharX = x + largura - 60;
+    int botaoFecharY = y + 10;
+    int botaoFecharLargura = 50;
+    int botaoFecharAltura = 50;
+
+    if (mouseX > botaoFecharX && mouseX < botaoFecharX + botaoFecharLargura &&
+        mouseY > botaoFecharY && mouseY < botaoFecharY + botaoFecharAltura) {
+      fechar(); // Fecha a janela se o botão de fechar for clicado
+      return;
+    }
+    // Ajusta as coordenadas do clique para o sistema de coordenadas local da janela
+    int localMouseX = mouseX - this.x; // 'this.x' é a coordenada X da janela
+    int localMouseY = mouseY - this.y; // 'this.y' é a coordenada Y da janela
+
+    // Agora, usamos localMouseX e localMouseY para verificar os cliques
+    for (int i = 0; i < botoes.length; i++) {
+        
+        float x = botoes[i][0];
+        float y = botoes[i][1];
+        float largura = botoes[i][2];
+        float altura = botoes[i][3];
+
+        // Verifica se o clique está dentro das coordenadas do botão, ajustado para a janela local
+        if (localMouseX >= x && localMouseX <= x + largura && localMouseY >= y && localMouseY <= y + altura ) {
+            // Depuração para verificar o índice do botão
+            println("Botão clicado:", i, "Coordenadas locais:", localMouseX, localMouseY);
+
+            // Define o botão selecionado
+            if (i < 6) { // Índices de 0 a 5 correspondem aos botões principais
+                
+                botaoSelecionado = i;
+                println("Botão selecionado:", botaoSelecionado);
+            } else if (i >= 6 && i <= 8) { // Índices de 6 a 8 são os botões internos
+                if (botaoSelecionado != -1 && botaoSelecionado < imagens.length) {
+                    imagens[i] = getItemPorIndex(botaoSelecionado); // Atualiza a imagem, ajustando o índice para os internos
+                    craftingSlots[i-6] = botaoSelecionado + 1;
+                    println("Imagem atualizada no botão interno:", i);
+                }
+            }
+            else if(i == 10)
+            {
+              int soma = 0;
+              for(int p = 0; p <3 ; p++)
+              {
+                soma += craftingSlots[p];
+              }
+              if(soma == 6 && craftingSlots[0] != 0 && craftingSlots[1] != 0 && craftingSlots[2] != 0)
+              {
+                jogo.puzzles.get(5).resolvido = true;
+                this.fechar();
+              }
+              println(soma);
+            }
+            return; // Sai da função após encontrar o botão
+        }
+    }
+
+    // Caso nenhum botão seja clicado, redefine o estado
+    botaoSelecionado = -1;
+    println("Nenhum botão foi clicado.");
+  }
+
+}
+
+//class Janela_Janela extends Janela{}
   
   
 // Funções principais do Processing
@@ -373,8 +575,20 @@ void draw() {
   jogo.desenhar(); // Chama o método desenhar() da classe Jogo para renderizar o estado do jogo na tela
   if (jogo.puzzles.get(1).resolvido) {
      image(jogo.imgEscapou, 0, 0, width, height);
+  }
+  if (jogo.puzzles.get(2).resolvido) {
+     image(jogo.imgEscapou, 0, 0, width, height);
   } 
-}
+  if (jogo.puzzles.get(3).resolvido) {
+     image(jogo.imgEscapou, 0, 0, width, height);
+  }  
+  if (jogo.puzzles.get(4).resolvido) {
+     image(jogo.imgEscapou, 0, 0, width, height);
+  } 
+  if (jogo.puzzles.get(0).resolvido) {
+     image(jogo.imgEscapou, 0, 0, width, height);
+  } 
+} 
 
 // Função mousePressed() é chamada sempre que o botão do mouse é pressionado
 void mousePressed() {
