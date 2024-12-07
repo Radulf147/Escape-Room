@@ -1,13 +1,12 @@
 import java.util.Arrays;
 // Classe principal do jogo
 
-
 class Jogo {
   PImage imgQuarto;         // Imagem que representa o fundo do quarto
   PImage imgEscapou;         // Imagem que representa o fundo quando escapa
   ArrayList<Puzzle> puzzles; // Lista que armazena os puzzles do jogo
   ArrayList<Janela> janelas; // Lista que armazena as janelas do jogo
-
+  Janela_Puzzle_Porta janela_puzzle_papel;
   // Construtor da classe Jogo
   Jogo() {
     imgQuarto = loadImage("Fundo_Base.png"); // Carrega a imagem de fundo do quarto
@@ -16,20 +15,28 @@ class Jogo {
     janelas = new ArrayList<>(); // Inicializa a lista de janelas
 
     // Criando e associando as janelas aos puzzles
-    Janela_Puzzle_Porta janela_puzzle_porta = new Janela_Puzzle_Porta(200, 100, 400, 400, "Fundo_Janela.png");
+    janela_puzzle_papel = new Janela_Puzzle_Porta(200, 100, 400, 400, "Fundo_Janela.png", "");
+    Janela_Puzzle_Porta janela_puzzle_porta = new Janela_Puzzle_Porta(200, 100, 400, 400, "Fundo_Janela.png", "Olá, JOGADOR. Os seus\namigos te trancaram\ndentro de casa e pra\npoder sair você terá\nque achar os puzzles\ne resolve-los.\n                                                             Boa sorte!" );
     Janela_Puzzle_Cadeado janela_puzzle_cadeado = new Janela_Puzzle_Cadeado(250, 150, 300, 300, "Fundo_Janela.png");
+    Janela_Puzzle_Janela janela_puzzle_janela = new Janela_Puzzle_Janela(100, 75, 600, 450, "Fundo_Vinil.jpg");
     Janela_Puzzle_Vinil janela_puzzle_vinil = new Janela_Puzzle_Vinil(150,50,500,500, "Fundo_Vinil.jpg");
+    Janela_Puzzle_Luminaria_Grande janela_puzzle_luminaria_grande = new Janela_Puzzle_Luminaria_Grande(150,50,500,500, "Fundo_Vinil.jpg");
+    Janela_Puzzle_Luminaria_Pequena janela_puzzle_luminaria_pequena = new Janela_Puzzle_Luminaria_Pequena(150,50,500,500, "Fundo_Vinil.jpg");
+    janelas.add(janela_puzzle_papel); // Adiciona a janela de puzzle do papel à lista de janelas
     janelas.add(janela_puzzle_porta); // Adiciona a janela de puzzle da porta à lista de janelas
     janelas.add(janela_puzzle_cadeado); // Adiciona a janela de puzzle do cadeado à lista de janelas
     janelas.add(janela_puzzle_vinil); // Adiciona a janela de puzzle do cadeado à lista de janelas
+    janelas.add(janela_puzzle_janela); // Adiciona a janela de puzzle do cadeado à lista de janelas
+    janelas.add(janela_puzzle_luminaria_grande); // Adiciona a janela de puzzle do cadeado à lista de janelas
+    janelas.add(janela_puzzle_luminaria_pequena); // Adiciona a janela de puzzle do cadeado à lista de janelas
 
     // Criando os puzzles e associando-os às janelas criadas
-    puzzles.add(new Puzzle("Papel 1", 555, 140, 40, 60, "Papel.png", janela_puzzle_porta));
-    puzzles.add(new Puzzle("Papel 2", 595, 180, 25, 30, "tranca.png", janela_puzzle_cadeado));
-    puzzles.add(new Puzzle("Papel 3", 520, 360, 60, 175, "", janela_puzzle_porta));
-    puzzles.add(new Puzzle("Papel 4", 80, 275, 75, 100, "", janela_puzzle_porta));
-    puzzles.add(new Puzzle("Papel 5", 300, 60, 100, 100, "", janela_puzzle_porta));
-    puzzles.add(new Puzzle("Papel 6", 60, 445, 100, 100, "", janela_puzzle_vinil));
+    puzzles.add(new Puzzle("Papel 1", 555, 140, 40, 60, "Papel.png", janela_puzzle_porta, "0"));
+    puzzles.add(new Puzzle("Papel 2", 595, 180, 25, 30, "tranca.png", janela_puzzle_cadeado, "0"));
+    puzzles.add(new Puzzle("Papel 3", 520, 360, 60, 175, "", janela_puzzle_luminaria_pequena, "0"));
+    puzzles.add(new Puzzle("Papel 4", 80, 275, 75, 100, "", janela_puzzle_luminaria_grande, "0"));
+    puzzles.add(new Puzzle("Papel 5", 300, 60, 100, 100, "", janela_puzzle_janela, "0"));
+    puzzles.add(new Puzzle("Papel 6", 60, 445, 100, 100, "", janela_puzzle_vinil, "00011"));
   }
 
   // Função responsável por desenhar os elementos do jogo
@@ -80,9 +87,10 @@ class Puzzle {
   boolean resolvido;         // Flag que indica se o puzzle foi resolvido
   PImage img;                // Imagem do puzzle
   Janela janelaAssociada;    // Janela associada ao puzzle
-
+  String codigoAssociado;
   // Construtor da classe Puzzle
-  Puzzle(String nome, int x, int y, int largura, int altura, String imgPath, Janela janela) {
+  Puzzle(String nome, int x, int y, int largura, int altura, String imgPath, Janela janela, String codigoAssociado) {
+    this.codigoAssociado = codigoAssociado;
     this.nome = nome;                         // Inicializa o nome do puzzle
     this.x = x;                               // Inicializa a coordenada x do puzzle
     this.y = y;                               // Inicializa a coordenada y do puzzle
@@ -103,11 +111,21 @@ class Puzzle {
 
   // Função para verificar se o puzzle foi clicado
   boolean verificarClique(int mouseX, int mouseY) {
+   
     // Verifica se o puzzle ainda não foi resolvido e se o clique ocorreu dentro da área do puzzle
-    if (!resolvido && mouseX > x && mouseX < x + largura && mouseY > y && mouseY < y + altura) {
-      janelaAssociada.abrir(); // Se o clique ocorreu, abre a janela associada ao puzzle
-      return true;  // Retorna true indicando que o clique foi detectado
+    if (mouseX > x && mouseX < x + largura && mouseY > y && mouseY < y + altura) {
+      if(!resolvido)
+      {
+        janelaAssociada.abrir(); // Se o clique ocorreu, abre a janela associada ao puzzle
+        return true;  // Retorna true indicando que o clique foi detectado
+      }     
+      else{
+        jogo.janela_puzzle_papel.texto = codigoAssociado;
+        jogo.janela_puzzle_papel.abrir();
+        return true; // Retorna true indicando que o clique foi detectado
+      }
     }
+    
     return false; // Retorna false se o clique não ocorreu na área do puzzle
   }
 }
@@ -119,6 +137,7 @@ abstract class Janela {
   boolean estaAberta;        // Flag que indica se a janela está aberta
   PGraphics superficie;      // Superfície de desenho da janela
   PImage fundo;              // Imagem de fundo da janela
+
   // Construtor da classe Janela
   Janela(int x, int y, int largura, int altura, String imgPath) {
     this.x = x;                               // Inicializa a coordenada x da janela
@@ -128,7 +147,6 @@ abstract class Janela {
     this.estaAberta = false;                  // Inicializa o estado da janela como fechada
     this.superficie = createGraphics(largura, altura); // Cria a superfície de desenho para a janela
     this.fundo = loadImage(imgPath);          // Carrega a imagem de fundo da janela
-
   }
 
   // Função para abrir a janela
@@ -150,9 +168,12 @@ abstract class Janela {
 
 // Subclasse de Janela para o puzzle da porta
 class Janela_Puzzle_Porta extends Janela {
+    String texto;
+    
   // Construtor da subclasse que chama o construtor da superclasse (Janela)
-  Janela_Puzzle_Porta(int x, int y, int largura, int altura, String imgPath) {
+  Janela_Puzzle_Porta(int x, int y, int largura, int altura, String imgPath, String texto) {
     super(x, y, largura, altura, imgPath); // Chama o construtor da classe pai (Janela) para inicializar a janela
+    this.texto = texto;
   }
 
   // Método para desenhar a janela
@@ -165,7 +186,7 @@ class Janela_Puzzle_Porta extends Janela {
     // Desenha um texto explicativo sobre o jogo
     superficie.fill(0); // Define a cor do texto como preto
     superficie.textSize(30); // Define o tamanho da fonte
-    superficie.text("Olá, JOGADOR. Os seus\namigos te trancaram\ndentro de casa e pra\npoder sair você terá\nque achar os puzzles\ne resolve-los.\n                           Boa sorte!", 50, 100);
+    superficie.text(texto, 50, 100);
     superficie.endDraw(); // Finaliza a renderização da superfície
 
     image(superficie, x, y); // Desenha a superfície na tela nas coordenadas (x, y)
@@ -249,7 +270,7 @@ class Janela_Puzzle_Cadeado extends Janela {
     int botaoFecharAltura = 50;
 
     superficie.image(xImg, botaoFecharX, botaoFecharY, botaoFecharLargura, botaoFecharAltura); // Desenha o botão de fechar com a imagem carregada
-
+    
     superficie.endDraw(); // Finaliza a renderização da superfície
     image(superficie, x, y); // Desenha a superfície na tela nas coordenadas (x, y)
   }
@@ -352,10 +373,137 @@ class Janela_Puzzle_Cadeado extends Janela {
   }
 }
 
-//Classes que faltam serem implementadas. Ao implementar cada classe você poderá fazer novos puzzles existirem
-/*class Janela_Puzzle_Luminaria_Grande extends Janela{}
-class Janela_Puzzle_Luminaria_Pequena extends Janela{}*/
 
+class Janela_Puzzle_Janela extends Janela {
+  String pergunta;         // Pergunta do quiz
+  String[] opcoes;         // Opções de resposta
+  int respostaCorreta;     // Índice da resposta correta
+  int respostaSelecionada; // Índice da resposta selecionada pelo jogador
+  boolean quizResolvido;   // Flag para indicar se o quiz foi resolvido
+  int acertos;             // Contador de acertos
+  int rodadaAtual;         // Rodada atual do quiz
+  boolean finalizado;      // Flag para indicar se o quiz foi finalizado
+  PImage xImg = loadImage("x.jpg");
+    
+  // Construtor da classe Janela_Puzzle_Janela
+  Janela_Puzzle_Janela(int x, int y, int largura, int altura, String imgPath) {
+    super(x, y, largura, altura, imgPath); // Chama o construtor da classe pai (Janela)
+    reiniciarJogo(); // Configura o estado inicial do jogo
+  }
+
+  // Método para configurar perguntas com base na rodada atual
+  void configurarPergunta() {
+    if (rodadaAtual == 0) {
+      pergunta = "Qual é a cor do céu em um dia claro?";
+      opcoes = new String[] { "Azul", "Verde", "Amarelo", "Roxo" };
+      respostaCorreta = 0; // Índice da resposta correta ("Azul")
+    } else if (rodadaAtual == 1) {
+      pergunta = "Qual é a capital da França?";
+      opcoes = new String[] { "Roma", "Paris", "Londres", "Berlim" };
+      respostaCorreta = 1; // Índice da resposta correta ("Paris")
+    } else if (rodadaAtual == 2) {
+      pergunta = "Qual é o maior planeta do sistema solar?";
+      opcoes = new String[] { "Terra", "Júpiter", "Marte", "Vênus" };
+      respostaCorreta = 1; // Índice da resposta correta ("Júpiter")
+    }
+  }
+
+  // Método para desenhar a janela
+  void desenhar() {
+    if (!estaAberta) return; // Verifica se a janela está aberta antes de desenhar
+
+    superficie.beginDraw(); // Inicia a renderização da superfície de desenho
+    superficie.image(fundo, 0, 0, largura, altura); // Desenha o fundo da janela
+
+    superficie.textSize(40); // Define o tamanho do texto
+
+    // Desenha a pergunta centralizada
+    superficie.fill(0); // Cor preta para o texto
+    float perguntaLargura = superficie.textWidth(pergunta);
+    superficie.text(pergunta, 50, 50);
+
+    // Desenha as opções de resposta centralizadas
+    superficie.textSize(25);
+    for (int i = 0; i < opcoes.length; i++) {
+      float opcaoLargura = superficie.textWidth(opcoes[i]);
+      
+      superficie.fill(255); // Cor branca para as outras respostas
+      
+      superficie.text(opcoes[i], (largura - opcaoLargura) / 2, 100 + i * 40);
+    }
+
+    // Mensagem final apenas se o jogador ganhou
+    if (finalizado && acertos >= 2) {
+      superficie.fill(0, 0, 255); // Cor azul para mensagem final
+      superficie.text("Parabéns! Você ganhou o puzzle!", largura / 4, 300);
+    }
+    
+    // Desenha o botão "Fechar"
+    int botaoFecharX = largura - 60; // Botão de fechar no canto superior direito
+    int botaoFecharY = 10;
+    int botaoFecharLargura = 50;
+    int botaoFecharAltura = 50;
+
+    superficie.image(xImg, botaoFecharX, botaoFecharY, botaoFecharLargura, botaoFecharAltura); // Desenha o botão de fechar com a imagem carregada
+    superficie.endDraw(); // Finaliza a renderização da superfície
+    image(superficie, x, y); // Desenha a superfície na tela
+  }
+
+  // Método para verificar cliques dentro da janela
+  void verificarClique(int mouseX, int mouseY) {
+    // Verifica clique no botão "Fechar"
+    int botaoFecharX = x + largura - 60;
+    int botaoFecharY = y + 10;
+    int botaoFecharLargura = 50;
+    int botaoFecharAltura = 50;
+
+    if (mouseX > botaoFecharX && mouseX < botaoFecharX + botaoFecharLargura &&
+        mouseY > botaoFecharY && mouseY < botaoFecharY + botaoFecharAltura) {
+      fechar(); // Fecha a janela se o botão de fechar for clicado
+      return;
+    }
+    if (!estaAberta || finalizado) return; // Ignora cliques se a janela estiver fechada ou finalizada
+
+    // Verifica qual opção foi clicada
+    for (int i = 0; i < opcoes.length; i++) {
+      if (mouseX > x && mouseX < x + largura && mouseY > y + 100 + i * 40 - 20 && mouseY < y + 100 + i * 40) {
+        respostaSelecionada = i;
+        if (respostaSelecionada == respostaCorreta) {
+          quizResolvido = true; // Marca o quiz como resolvido
+          acertos++;
+        } else {
+          quizResolvido = false;
+        }
+
+        // Avança para a próxima rodada ou finaliza o jogo
+        rodadaAtual++;
+        if (rodadaAtual < 3) {
+          configurarPergunta();
+        } else {
+          if (acertos >= 2) {
+            finalizado = true; // Finaliza o jogo se ganhou
+          } else {
+            reiniciarJogo(); // Reinicia o jogo se perdeu
+          }
+        }
+        respostaSelecionada = -1; // Reseta a seleção de resposta
+      }
+    }
+
+    // Fecha a janela se o quiz já foi finalizado
+    if (finalizado) {
+    }
+  }
+
+  // Método para reiniciar o jogo
+  void reiniciarJogo() {
+    rodadaAtual = 0;
+    acertos = 0;
+    finalizado = false;
+    quizResolvido = false;
+    configurarPergunta();
+  }
+}
 
 class Janela_Puzzle_Vinil extends Janela {
 
@@ -367,7 +515,7 @@ class Janela_Puzzle_Vinil extends Janela {
   int botaoSelecionado = -1; // Índice do item selecionado do inventário
   boolean combinacaoValida = false;
   String mensagemErro = "";
-  PImage[] imagens = {loadImage("Pilha.png"), loadImage("Prego.png"), loadImage("Fio_Cobre.png"), loadImage("Madeira.png"), loadImage("Fio_Lã.png"), loadImage("Carregador.png"), loadImage("fundo_craft.jpg"), loadImage("fundo_craft.jpg"), loadImage("fundo_craft.jpg")};
+  PImage[] imagens = {loadImage("Pilha.png"), loadImage("Prego.png"), loadImage("Fio_Cobre.png"), loadImage("Madeira.png"), loadImage("Fio_Lã.png"), loadImage("Carregador.png"), loadImage("fundo_craft.jpg"), loadImage("fundo_craft.jpg"), loadImage("fundo_craft.jpg"), loadImage("fundo_craft.jpg")};
   int[][] coordenadas = new int[10][3];
   int botaoFecharX = largura - 60; // Botão de fechar no canto superior direito
   int botaoFecharY = 10;
@@ -476,9 +624,10 @@ class Janela_Puzzle_Vinil extends Janela {
     botoes[indice][1] = internoHorizontalY;
     botoes[indice][2] = internoHorizontalLargura;
     botoes[indice][3] = internoHorizontalAltura;
+    superficie.image(imagens[9], internoHorizontalX, internoHorizontalY, internoHorizontalLargura, internoHorizontalAltura);
     indice++;
-    superficie.fill(150, 150, 200);
-    superficie.rect(internoHorizontalX, internoHorizontalY, internoHorizontalLargura, internoHorizontalAltura);
+    //superficie.fill(150, 150, 200);
+    //superficie.rect(internoHorizontalX, internoHorizontalY, internoHorizontalLargura, internoHorizontalAltura);
 
     superficie.image(xImg, botaoFecharX, botaoFecharY, botaoFecharLargura, botaoFecharAltura); // Desenha o botão de fechar com a imagem carregada
 
@@ -493,6 +642,110 @@ class Janela_Puzzle_Vinil extends Janela {
   @Override
 void verificarClique(int mouseX, int mouseY) {
   // Verifica clique no botão "Fechar"
+  int botaoFecharX = x + largura - 60;
+  int botaoFecharY = y + 10;
+  int botaoFecharLargura = 50;
+  int botaoFecharAltura = 50;
+
+  if (mouseX > botaoFecharX && mouseX < botaoFecharX + botaoFecharLargura &&
+      mouseY > botaoFecharY && mouseY < botaoFecharY + botaoFecharAltura) {
+    fechar(); // Fecha a janela se o botão de fechar for clicado
+    return;
+  }
+  if(!jogo.puzzles.get(5).resolvido){
+      // Ajusta as coordenadas do clique para o sistema de coordenadas local da janela
+      int localMouseX = mouseX - this.x; // 'this.x' é a coordenada X da janela
+      int localMouseY = mouseY - this.y; // 'this.y' é a coordenada Y da janela
+  
+      // Agora, usamos localMouseX e localMouseY para verificar os cliques
+      for (int i = 0; i < botoes.length; i++) {
+          
+          float x = botoes[i][0];
+          float y = botoes[i][1];
+          float largura = botoes[i][2];
+          float altura = botoes[i][3];
+  
+          // Verifica se o clique está dentro das coordenadas do botão, ajustado para a janela local
+          if (localMouseX >= x && localMouseX <= x + largura && localMouseY >= y && localMouseY <= y + altura ) {
+              // Depuração para verificar o índice do botão
+              println("Botão clicado:", i, "Coordenadas locais:", localMouseX, localMouseY);
+  
+              // Define o botão selecionado
+              if (i < 6) { // Índices de 0 a 5 correspondem aos botões principais
+                  
+                  botaoSelecionado = i;
+                  println("Botão selecionado:", botaoSelecionado);
+              } else if (i >= 6 && i <= 8) { // Índices de 6 a 8 são os botões internos
+                  if (botaoSelecionado != -1 && botaoSelecionado < imagens.length) {
+                      imagens[i] = getItemPorIndex(botaoSelecionado); // Atualiza a imagem, ajustando o índice para os internos
+                      craftingSlots[i-6] = botaoSelecionado + 1;
+                      println("Imagem atualizada no botão interno:", i);
+                  }
+              }
+              else if(i == 10)
+              {
+                int soma = 0;
+                for(int p = 0; p <3 ; p++)
+                {
+                  soma += craftingSlots[p];
+                }
+                if(soma == 6 && craftingSlots[0] != 0 && craftingSlots[1] != 0 && craftingSlots[2] != 0)
+                {
+                  jogo.puzzles.get(5).resolvido = true;
+                  imagens[9] = loadImage("Prego_bateria_fio.png");
+                  println("oi");
+                }
+                println(soma);
+              }
+              return; // Sai da função após encontrar o botão
+          }
+      }
+  
+      // Caso nenhum botão seja clicado, redefine o estado
+      botaoSelecionado = -1;
+      println("Nenhum botão foi clicado.");
+    }
+  }
+}
+class Janela_Puzzle_Luminaria_Pequena extends Janela
+{
+  PImage xImg = loadImage("x.jpg");
+  Janela_Puzzle_Luminaria_Pequena(int x, int y, int largura, int altura, String imgPath) {
+    super(x, y, largura, altura, imgPath);
+  }
+  @Override
+   // Método para desenhar a janela
+  void desenhar() {
+    if (!estaAberta) return; // Verifica se a janela está aberta antes de desenhar
+
+    superficie.beginDraw(); // Inicia a renderização da superfície de desenho
+    superficie.image(fundo, 0, 0, largura, altura); // Desenha o fundo da janela na superfície
+
+    // Desenha um texto explicativo sobre o jogo
+    superficie.fill(0); // Define a cor do texto como preto
+    superficie.textSize(30); // Define o tamanho da fonte
+    superficie.text("Vai se foder Luiz Bissoli", 50, 100);
+    
+    // Desenha o botão "Fechar"
+    int botaoFecharX = largura - 60; // Botão de fechar no canto superior direito
+    int botaoFecharY = 10;
+    int botaoFecharLargura = 50;
+    int botaoFecharAltura = 50;
+
+    superficie.image(xImg, botaoFecharX, botaoFecharY, botaoFecharLargura, botaoFecharAltura); // Desenha o botão de fechar com a imagem carregada
+    
+    superficie.endDraw(); // Finaliza a renderização da superfície
+
+    image(superficie, x, y); // Desenha a superfície na tela nas coordenadas (x, y)
+  }
+
+  // Método para verificar cliques na janela
+  void verificarClique(int mouseX, int mouseY) {
+    // Verifica se o clique ocorreu dentro da área da janela
+    if (mouseX > x && mouseX < x + largura && mouseY > y && mouseY < y + altura) {
+      fechar(); // Se clicado, fecha a janela
+    }
+    // Verifica clique no botão "Fechar"
     int botaoFecharX = x + largura - 60;
     int botaoFecharY = y + 10;
     int botaoFecharLargura = 50;
@@ -503,63 +756,60 @@ void verificarClique(int mouseX, int mouseY) {
       fechar(); // Fecha a janela se o botão de fechar for clicado
       return;
     }
-    // Ajusta as coordenadas do clique para o sistema de coordenadas local da janela
-    int localMouseX = mouseX - this.x; // 'this.x' é a coordenada X da janela
-    int localMouseY = mouseY - this.y; // 'this.y' é a coordenada Y da janela
+  }  
+}
+class Janela_Puzzle_Luminaria_Grande extends Janela
+{
+  PImage xImg = loadImage("x.jpg");
+  Janela_Puzzle_Luminaria_Grande(int x, int y, int largura, int altura, String imgPath) {
+    super(x, y, largura, altura, imgPath);
+  }
+  @Override
+  // Método para desenhar a janela
+  void desenhar() {
+    if (!estaAberta) return; // Verifica se a janela está aberta antes de desenhar
 
-    // Agora, usamos localMouseX e localMouseY para verificar os cliques
-    for (int i = 0; i < botoes.length; i++) {
-        
-        float x = botoes[i][0];
-        float y = botoes[i][1];
-        float largura = botoes[i][2];
-        float altura = botoes[i][3];
+    superficie.beginDraw(); // Inicia a renderização da superfície de desenho
+    superficie.image(fundo, 0, 0, largura, altura); // Desenha o fundo da janela na superfície
 
-        // Verifica se o clique está dentro das coordenadas do botão, ajustado para a janela local
-        if (localMouseX >= x && localMouseX <= x + largura && localMouseY >= y && localMouseY <= y + altura ) {
-            // Depuração para verificar o índice do botão
-            println("Botão clicado:", i, "Coordenadas locais:", localMouseX, localMouseY);
+    // Desenha um texto explicativo sobre o jogo
+    superficie.fill(0); // Define a cor do texto como preto
+    superficie.textSize(30); // Define o tamanho da fonte
+    superficie.text("Vai se foder Luiz Bissoli", 50, 100);
+    
+    // Desenha o botão "Fechar"
+    int botaoFecharX = largura - 60; // Botão de fechar no canto superior direito
+    int botaoFecharY = 10;
+    int botaoFecharLargura = 50;
+    int botaoFecharAltura = 50;
 
-            // Define o botão selecionado
-            if (i < 6) { // Índices de 0 a 5 correspondem aos botões principais
-                
-                botaoSelecionado = i;
-                println("Botão selecionado:", botaoSelecionado);
-            } else if (i >= 6 && i <= 8) { // Índices de 6 a 8 são os botões internos
-                if (botaoSelecionado != -1 && botaoSelecionado < imagens.length) {
-                    imagens[i] = getItemPorIndex(botaoSelecionado); // Atualiza a imagem, ajustando o índice para os internos
-                    craftingSlots[i-6] = botaoSelecionado + 1;
-                    println("Imagem atualizada no botão interno:", i);
-                }
-            }
-            else if(i == 10)
-            {
-              int soma = 0;
-              for(int p = 0; p <3 ; p++)
-              {
-                soma += craftingSlots[p];
-              }
-              if(soma == 6 && craftingSlots[0] != 0 && craftingSlots[1] != 0 && craftingSlots[2] != 0)
-              {
-                jogo.puzzles.get(5).resolvido = true;
-                this.fechar();
-              }
-              println(soma);
-            }
-            return; // Sai da função após encontrar o botão
-        }
-    }
+    superficie.image(xImg, botaoFecharX, botaoFecharY, botaoFecharLargura, botaoFecharAltura); // Desenha o botão de fechar com a imagem carregada
+    
+    superficie.endDraw(); // Finaliza a renderização da superfície
 
-    // Caso nenhum botão seja clicado, redefine o estado
-    botaoSelecionado = -1;
-    println("Nenhum botão foi clicado.");
+    image(superficie, x, y); // Desenha a superfície na tela nas coordenadas (x, y)
   }
 
-}
+  // Método para verificar cliques na janela
+  void verificarClique(int mouseX, int mouseY) {
+    // Verifica clique no botão "Fechar"
+    int botaoFecharX = x + largura - 60;
+    int botaoFecharY = y + 10;
+    int botaoFecharLargura = 50;
+    int botaoFecharAltura = 50;
 
-//class Janela_Janela extends Janela{}
-  
-  
+    if (mouseX > botaoFecharX && mouseX < botaoFecharX + botaoFecharLargura &&
+        mouseY > botaoFecharY && mouseY < botaoFecharY + botaoFecharAltura) {
+      fechar(); // Fecha a janela se o botão de fechar for clicado
+      return;
+    }
+    // Verifica se o clique ocorreu dentro da área da janela
+    if (mouseX > x && mouseX < x + largura && mouseY > y && mouseY < y + altura) {
+      fechar(); // Se clicado, fecha a janela
+    }
+    
+  }
+}
 // Funções principais do Processing
 Jogo jogo; // Cria uma variável do tipo 'Jogo' chamada jogo
 
@@ -575,7 +825,7 @@ void draw() {
   jogo.desenhar(); // Chama o método desenhar() da classe Jogo para renderizar o estado do jogo na tela
   if (jogo.puzzles.get(1).resolvido) {
      image(jogo.imgEscapou, 0, 0, width, height);
-  }
+  }/*
   if (jogo.puzzles.get(2).resolvido) {
      image(jogo.imgEscapou, 0, 0, width, height);
   } 
@@ -587,7 +837,7 @@ void draw() {
   } 
   if (jogo.puzzles.get(0).resolvido) {
      image(jogo.imgEscapou, 0, 0, width, height);
-  } 
+  } */
 } 
 
 // Função mousePressed() é chamada sempre que o botão do mouse é pressionado
